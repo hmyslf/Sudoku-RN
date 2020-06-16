@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, FlatList, TextInput, View, Text } from 'react-native';
+import { StyleSheet, FlatList, TextInput, View } from 'react-native';
 
 function SudokuGrid (props) {
     const { boards } = props;
@@ -9,7 +9,7 @@ function SudokuGrid (props) {
     }
     return (
         <View>
-            <FlatList data={boards.board}
+            <FlatList data={boards}
             renderItem={({ item }) => 
                 <View style={styles.grid}>
                     {

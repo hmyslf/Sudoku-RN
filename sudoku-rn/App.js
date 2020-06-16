@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, KeyboardAvoidingView } from 'react-native';
 import SudokuGrid from './components/SudokuGrid.js';
 import axios from 'axios';
 
 export default function App() {
   const [boards, setBoards] = useState([]);
+  const [initialBoards, setInitialBoards] = useState([]);
   const [reset, setReset] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -12,7 +13,9 @@ export default function App() {
     axios
       .get('https://sugoku.herokuapp.com/board?difficulty=random')
       .then(({ data }) => {
-        setBoards(data);
+        setBoards(data.board);
+        const val = data.board.map(row => [...row]);
+        setInitialBoards(val);
       })
       .catch(err => {
         setMessage(err.message);
@@ -34,14 +37,11 @@ export default function App() {
   }
 
   const solveSudoku = () => {
-    const data = encodeSudoku(boards);
+    const encode = encodeSudoku({board: initialBoards});
     axios
-      .post('http://sugoku.herokuapp.com/solve', data)
+      .post('http://sugoku.herokuapp.com/solve', encode)
       .then(({ data }) => {
-        const solved = {
-          board: data.solution
-        }
-        setBoards(solved);
+        setBoards(data.solution);
         setMessage(data.status);
         setTimeout(() => {
           setMessage('');
@@ -56,9 +56,9 @@ export default function App() {
   }
 
   const submitSudoku = () => {
-    const data = encodeSudoku(boards);
+    const encode = encodeSudoku({board: boards});
     axios
-      .post('http://sugoku.herokuapp.com/validate', data)
+      .post('http://sugoku.herokuapp.com/validate', encode)
       .then(({ data }) => {
         setMessage(data.status);
         setTimeout(() => {
@@ -81,7 +81,7 @@ export default function App() {
     <View style={styles.container}>
       <Text>Sudoku with React Native</Text>
       <Text>{message}</Text>
-      <View style={styles.container}>
+      <View style={styles.sudokuboard}>
         <SudokuGrid boards={boards} />
       </View>
       <View style={
@@ -128,12 +128,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop: 50
   },
+  sudokuboard: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 25
+  },
   whiteText: {
     color: "#fff"
   },
   button_rows: {
-    flex: 1,
-    paddingTop: 50,
+    flex: 0.2,
+    marginTop: 25,
     flexDirection: "row",
     justifyContent: "center"
   },
