@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, Button } from 'react-native';
+import { StyleSheet, Text, View, TextInput, Button, Picker } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { setName } from '../store/actions';
 
 export default function Home ({ navigation }) {
   const [username, setUsername] = useState('');
+  const [selectedValue, setSelectedValue] = useState('easy');
 
   const dispatch = useDispatch();
 
   const playButton = () => {
     dispatch(setName(username));
-    navigation.navigate('Game')
+    setUsername('');
+    navigation.navigate('Game', {
+      difficulty: selectedValue
+    })
   }
 
   const onChangeText = (text) => {
@@ -25,6 +29,16 @@ export default function Home ({ navigation }) {
         onChangeText={text => onChangeText(text)}
         defaultValue={username}
       />
+      <Text>Select Difficulty</Text>
+      <Picker
+        selectedValue={selectedValue}
+        style={styles.playerInput}
+        onValueChange={(itemValue, itemIndex) => setSelectedValue(itemValue)}
+      >
+        <Picker.Item label="Easy" value="easy" />
+        <Picker.Item label="Medium" value="medium" />
+        <Picker.Item label="Hard" value="hard" />
+      </Picker>
       <Button
         title="Play!"
         onPress={playButton}

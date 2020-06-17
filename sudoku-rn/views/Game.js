@@ -1,28 +1,20 @@
 import React, {useEffect, useState} from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import SudokuGrid from '../components/SudokuGrid.js';
-import axios from 'axios';
+import { fetchBoard, setMessage, handleSolve, handleSubmit, setStatus } from '../store/actions';
 
-export default function Game ({ navigation }) {
-  const [boards, setBoards] = useState([]);
-  const [initialBoards, setInitialBoards] = useState([]);
+export default function Game ({ route, navigation }) {
+  const dispatch = useDispatch();
+  const {difficulty} = route.params;
+  const boards = useSelector((state) => state.board);
+  const initialBoards = useSelector((state) => state.initialBoards);
   const [reset, setReset] = useState(false);
-  const [message, setMessage] = useState('');
+  const message = useSelector((state) => state.message);
+  const status = useSelector((state) => state.status);
 
   useEffect(() => {
-    axios
-      .get('https://sugoku.herokuapp.com/board?difficulty=random')
-      .then(({ data }) => {
-        setBoards(data.board);
-        const val = data.board.map(row => [...row]);
-        setInitialBoards(val);
-      })
-      .catch(err => {
-        setMessage(err.message);
-        setTimeout(() => {
-          setMessage('')
-        }, 3000)
-      })
+    dispatch(fetchBoard(difficulty));
   }, [reset]);
 
   const encodeSudoku = (params) => {
@@ -38,54 +30,33 @@ export default function Game ({ navigation }) {
 
   const solveSudoku = () => {
     const encode = encodeSudoku({board: initialBoards});
-    axios
-      .post('http://sugoku.herokuapp.com/solve', encode)
-      .then(({ data }) => {
-        setBoards(data.solution);
-        setMessage(data.status);
-        setTimeout(() => {
-          setMessage('');
-        }, 3000)
+    dispatch(handleSolve(encode));
+    if (status) {
+      navigation.navigate('Finish', {
+        status
       })
-      .catch(err => {
-        setMessage(err.message);
-        setTimeout(() => {
-          setMessage('');
-        }, 3000)
-      });
-      setTimeout(() => {
-        navigation.navigate('Finish')
-      }, 4000)
+    }
   }
 
   const submitSudoku = () => {
     const encode = encodeSudoku({board: boards});
-    axios
-      .post('http://sugoku.herokuapp.com/validate', encode)
-      .then(({ data }) => {
-        setMessage(data.status);
-        setTimeout(() => {
-          setMessage('');
-        }, 3000);
+    dispatch(handleSubmit(encode));
+    if (status) {
+      navigation.navigate('Finish', {
+        status
       })
-      .catch(err => {
-        setMessage(err.message);
-        setTimeout(() => {
-          setMessage('');
-        }, 3000);
-      });
-      setTimeout(() => {
-        navigation.navigate('Finish')
-      }, 4000)
+    }
   }
   const resetBoard = () => {
-    setMessage('');
+    dispatch(setStatus(false));
+    dispatch(setMessage(''));
     setReset(!reset);
   }
 
   return (
     <View style={styles.container}>
       <Text>Sudoku with React Native</Text>
+      <Text>Difficulty: {difficulty}</Text>
       <Text>{message}</Text>
       <View style={styles.sudokuboard}>
         <SudokuGrid boards={boards} />
