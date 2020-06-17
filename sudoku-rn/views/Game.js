@@ -31,7 +31,8 @@ export default function Game ({ route, navigation }) {
   const solveSudoku = () => {
     const encode = encodeSudoku({board: initialBoards});
     dispatch(handleSolve(encode));
-    if (status) {
+    dispatch(setStatus(true));
+    if(status) {
       navigation.navigate('Finish', {
         status
       })
